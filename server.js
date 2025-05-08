@@ -6,7 +6,6 @@ const cors = require('cors');
 const nodemailer = require('nodemailer');
 const PDFDocument = require('pdfkit');
 const fs = require('fs');
-const path = require('path');
 
 const app = express();
 app.use(cors());
