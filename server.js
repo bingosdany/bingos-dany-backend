@@ -11,19 +11,21 @@ app.use(cors());
 app.use(express.static('public'));
 
 const storage = multer.memoryStorage();
-const upload = multer({ storage: storage });
+const upload = multer({ storage });
 
+// Función que genera el PDF con cartones usando el fondo personalizado
 function generarCartonesPDF(cantidad, rutaSalida) {
-  const doc = new PDFDocument({ size: 'A4' });
+  const doc = new PDFDocument({ size: 'A4', margin: 0 });
   const stream = fs.createWriteStream(rutaSalida);
   doc.pipe(stream);
 
   const imagenFondo = path.join(__dirname, 'public', 'carton_fondo.png');
+
   const cartonesPorFila = 2;
-  const espacioX = 270;
-  const espacioY = 350;
-  const margenX = 30;
-  const margenY = 40;
+  const espacioX = 290;
+  const espacioY = 360;
+  const margenX = 10;
+  const margenY = 20;
 
   let contador = 0;
   const filas = Math.ceil(cantidad / cartonesPorFila);
@@ -35,8 +37,8 @@ function generarCartonesPDF(cantidad, rutaSalida) {
       const x = margenX + col * espacioX;
       const y = margenY + fila * espacioY;
 
-      doc.image(imagenFondo, x, y, { width: 240 });
-      doc.text(`Cartón ${contador + 1}`, x + 80, y + 260);
+      doc.image(imagenFondo, x, y, { width: 280 });
+      doc.fontSize(12).fillColor('black').text(`Cartón ${contador + 1}`, x + 90, y + 260);
 
       contador++;
     }
@@ -45,14 +47,16 @@ function generarCartonesPDF(cantidad, rutaSalida) {
   doc.end();
 }
 
+// Configuración de correo
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
     user: 'bingosdanyoficial@gmail.com',
-    pass: 'pxvhbnxtjqfysksa' // reemplaza esto con tu contraseña de app
+    pass: 'pxvhbnxtjqfysksa' // tu contraseña de aplicación
   }
 });
 
+// Ruta para recibir formulario
 app.post('/enviar', upload.single('archivo'), async (req, res) => {
   const { nombre, correo, cantidad } = req.body;
   const archivo = req.file;
@@ -70,7 +74,6 @@ app.post('/enviar', upload.single('archivo'), async (req, res) => {
   const rutaPDF = path.join(__dirname, 'cartones', `cartones_${Date.now()}.pdf`);
   generarCartonesPDF(parseInt(cantidad), rutaPDF);
 
-  // Esperar a que el PDF se haya generado
   setTimeout(() => {
     const mailOptions = {
       from: 'Bingos Dany <bingosdanyoficial@gmail.com>',
@@ -94,9 +97,10 @@ app.post('/enviar', upload.single('archivo'), async (req, res) => {
         res.json({ mensaje: 'Formulario y cartones enviados correctamente' });
       }
     });
-  }, 1000); // Esperar un segundo para asegurar que el PDF se haya generado
+  }, 1000);
 });
 
+// Iniciar servidor
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Servidor escuchando en puerto ${PORT}`);
