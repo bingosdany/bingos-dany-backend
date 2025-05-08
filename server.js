@@ -20,7 +20,7 @@ function generarCartonesPDF(cantidad, rutaSalida) {
   const stream = fs.createWriteStream(rutaSalida);
   doc.pipe(stream);
 
-  const imagenFondo = path.join(__dirname, 'public', 'carton_fondo.png');
+  const imagenFondo = fondoPath;
 
   const cartonesPorFila = 2;
   const espacioX = 290;
