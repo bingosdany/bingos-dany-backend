@@ -6,9 +6,8 @@ const fs = require('fs');
 const path = require('path');
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
-// Configuración de multer para manejar archivos subidos
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, 'uploads/');
@@ -23,31 +22,25 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static('public'));
 
-// Crear carpeta de uploads si no existe
 if (!fs.existsSync('uploads')) {
   fs.mkdirSync('uploads');
 }
 
-// Cargar lista de cartones
 let cartones = JSON.parse(fs.readFileSync('cartones.json', 'utf8'));
 
-// Ruta para manejar envíos
 app.post('/enviar', upload.single('comprobante'), async (req, res) => {
   const { nombre, correo } = req.body;
   const comprobante = req.file;
 
-  // Buscar un cartón no usado
   const cartonDisponible = cartones.find(c => !c.usado);
 
   if (!cartonDisponible) {
     return res.status(400).send('No hay cartones disponibles.');
   }
 
-  // Marcar como usado
   cartonDisponible.usado = true;
   fs.writeFileSync('cartones.json', JSON.stringify(cartones, null, 2));
 
-  // Enviar correo con cartón
   const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
