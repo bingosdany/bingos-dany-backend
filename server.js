@@ -6,7 +6,7 @@ const path = require('path');
 const app = express();
 
 // Middleware
-app.use(cors()); // Permitir peticiones de otros orígenes
+app.use(cors());
 app.use(express.json());
 
 // Configurar multer para manejar archivos enviados
@@ -39,5 +39,5 @@ app.post('/upload', upload.single('archivo'), (req, res) => {
 // Iniciar el servidor
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`Servidor escuchando en puerto ${PORT}`);
+  console.log(`Servidor activo en puerto ${PORT}`);
 });
