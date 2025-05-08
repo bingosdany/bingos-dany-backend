@@ -1,3 +1,5 @@
+const path = require('path');
+const fondoPath = path.join(__dirname, 'public', 'carton_fondo.png');
 const express = require('express');
 const multer = require('multer');
 const cors = require('cors');
