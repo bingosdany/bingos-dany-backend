@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bingos Dany</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-image: url('fondobingo.png');
+      background-size: cover;
+      background-repeat: no-repeat;
+      background-position: center;
+      font-family: 'Arial', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .form-container {
+      background: rgba(0, 0, 0, 0.7);
+      padding: 30px;
+      border-radius: 15px;
+      width: 90%;
+      max-width: 400px;
+      text-align: center;
+      color: white;
+    }
+
+    .titulo-colorido {
+      font-size: 36px;
+      font-weight: bold;
+      background: linear-gradient(90deg, #ff007f, #ffae00, #00e6e6, #ff007f);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 10px;
+    }
+
+    .form-container p {
+      margin: 5px 0 20px;
+      font-size: 16px;
+    }
+
+    .form-container input,
+    .form-container button,
+    .form-container label {
+      width: 100%;
+      margin-bottom: 15px;
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+
+    .form-container input[type="file"] {
+      background: white;
+    }
+
+    .form-container input[type="text"],
+    .form-container input[type="email"] {
+      background: #fff;
+    }
+
+    .btn-nequi,
+    .btn-submit {
+      background-color: #ff007f;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .btn-nequi:hover,
+    .btn-submit:hover {
+      background-color: #cc0066;
+    }
+
+    .progress-bar {
+      width: 100%;
+      background-color: #ccc;
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 10px;
+    }
+
+    .progress-fill {
+      background-color: #00e6e6;
+      text-align: center;
+      padding: 5px 0;
+      font-weight: bold;
+    }
+
+    .footer {
+      font-size: 14px;
+      color: #ddd;
+      margin-top: 10px;
+    }
+
+    .footer a {
+      color: #00ffcc;
+      text-decoration: none;
+    }
+
+    .footer a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="form-container">
+    <h1 class="titulo-colorido">Bingos Dany</h1>
+    <p>Valor del cartón: <strong>$5.000</strong></p>
+
+    <button class="btn-nequi" onclick="copiarNequi()">3103571291 - Copiar Nequi</button>
+
+    <input type="text" placeholder="Nombre" required>
+    <input type="email" placeholder="Correo" required>
+    <input type="file" required>
+
+    <button class="btn-submit">Enviar comprobante</button>
+
+    <div class="progress-bar">
+      <div class="progress-fill" id="progreso-barra">40% vendido</div>
+    </div>
+
+    <div class="footer">
+      Atención al cliente: 
+      <a href="https://wa.me/573207171009?text=Hola%2C%20estoy%20interesado%20en%20los%20bingos%20de%20Dany." target="_blank">
+        <i class="fab fa-whatsapp" style="margin-right: 5px;"></i>3207171009
+      </a>
+    </div>
+  </div>
+
+  <script>
+    function copiarNequi() {
+      navigator.clipboard.writeText("3103571291")
+        .then(() => alert("Número Nequi copiado: 3103571291"))
+        .catch(() => alert("Error al copiar el número"));
+    }
+
+    // Porcentaje dinámico
+    const totalCartones = 100; // Total de cartones disponibles
+    const vendidos = 42;       // Cantidad de cartones vendidos
+
+    const porcentaje = Math.round((vendidos / totalCartones) * 100);
+    const progressBar = document.getElementById('progreso-barra');
+    progressBar.style.width = porcentaje + '%';
+    progressBar.textContent = porcentaje + '% vendido';
+  </script>
+</body>
+</html>
