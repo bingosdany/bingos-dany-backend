@@ -8,6 +8,7 @@ const app = express();
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true })); // importante para leer campos del formulario
 
 // Configurar multer para manejar archivos enviados
 const storage = multer.memoryStorage();
@@ -20,15 +21,16 @@ app.get('/', (req, res) => {
 
 // Ruta para recibir el formulario
 app.post('/upload', upload.single('archivo'), (req, res) => {
-  const { nombre, correo } = req.body;
+  const { nombre, correo, cantidad } = req.body;
   const archivo = req.file;
 
   console.log('--- NUEVO ENVÍO ---');
   console.log('Nombre:', nombre);
   console.log('Correo:', correo);
+  console.log('Cantidad de cartones:', cantidad);
   console.log('Archivo recibido:', archivo ? archivo.originalname : 'Ninguno');
 
-  if (!nombre || !correo || !archivo) {
+  if (!nombre || !correo || !archivo || !cantidad) {
     return res.status(400).json({ error: 'Datos incompletos' });
   }
 
