@@ -1,5 +1,4 @@
 const path = require('path');
-const fondoPath = path.join(__dirname, 'public', 'carton_fondo.png');
 const express = require('express');
 const multer = require('multer');
 const cors = require('cors');
@@ -14,50 +13,61 @@ app.use(express.static('public'));
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
-// Función que genera el PDF con cartones usando el fondo personalizado
+function generarNumerosUnicos(min, max, cantidad) {
+  const numeros = new Set();
+  while (numeros.size < cantidad) {
+    const numero = Math.floor(Math.random() * (max - min + 1)) + min;
+    numeros.add(numero);
+  }
+  return Array.from(numeros);
+}
+
 function generarCartonesPDF(cantidad, rutaSalida) {
-  const doc = new PDFDocument({ size: 'A4', margin: 0 });
+  const doc = new PDFDocument({ size: 'A4' });
   const stream = fs.createWriteStream(rutaSalida);
   doc.pipe(stream);
 
-  const imagenFondo = fondoPath;
+  for (let i = 0; i < cantidad; i++) {
+    doc.addPage();
+    doc.fontSize(20).text('B I N G O', 100, 80);
 
-  const cartonesPorFila = 2;
-  const espacioX = 290;
-  const espacioY = 360;
-  const margenX = 10;
-  const margenY = 20;
+    const columnas = {
+      B: generarNumerosUnicos(1, 15, 5),
+      I: generarNumerosUnicos(16, 30, 5),
+      N: generarNumerosUnicos(31, 45, 5),
+      G: generarNumerosUnicos(46, 60, 5),
+      O: generarNumerosUnicos(61, 75, 5),
+    };
+    columnas.N[2] = 'FREE';
 
-  let contador = 0;
-  const filas = Math.ceil(cantidad / cartonesPorFila);
+    const letras = ['B', 'I', 'N', 'G', 'O'];
+    const xInicio = 100;
+    const yInicio = 120;
+    const ancho = 50;
+    const alto = 40;
 
-  for (let fila = 0; fila < filas; fila++) {
-    for (let col = 0; col < cartonesPorFila; col++) {
-      if (contador >= cantidad) break;
-
-      const x = margenX + col * espacioX;
-      const y = margenY + fila * espacioY;
-
-      doc.image(imagenFondo, x, y, { width: 280 });
-      doc.fontSize(12).fillColor('black').text(`Cartón ${contador + 1}`, x + 90, y + 260);
-
-      contador++;
-    }
+    letras.forEach((letra, col) => {
+      for (let fila = 0; fila < 5; fila++) {
+        const valor = columnas[letra][fila];
+        const texto = valor.toString();
+        const x = xInicio + col * ancho;
+        const y = yInicio + fila * alto;
+        doc.fontSize(14).text(texto, x + 15, y + 10);
+      }
+    });
   }
 
   doc.end();
 }
 
-// Configuración de correo
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
     user: 'bingosdanyoficial@gmail.com',
-    pass: 'pxvhbnxtjqfysksa' // tu contraseña de aplicación
+    pass: 'pxvhbnxtjqfysksa'
   }
 });
 
-// Ruta para recibir formulario
 app.post('/enviar', upload.single('archivo'), async (req, res) => {
   const { nombre, correo, cantidad } = req.body;
   const archivo = req.file;
@@ -101,7 +111,6 @@ app.post('/enviar', upload.single('archivo'), async (req, res) => {
   }, 1000);
 });
 
-// Iniciar servidor
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Servidor escuchando en puerto ${PORT}`);
