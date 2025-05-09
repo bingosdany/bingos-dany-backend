@@ -40,19 +40,18 @@ function generarNumeros(min, max) {
 }
 
 function dibujarCarton(doc, x, y, datos) {
-  const cellSize = 90;
-  doc.rect(x, y - 6 * cellSize, cellSize * 5, cellSize * 6).stroke();
+  const tamCelda = 45;
+  const columnas = ['B', 'I', 'N', 'G', 'O'];
 
-  for (let row = 0; row < 6; row++) {
+  for (let fila = 0; fila < 6; fila++) {
     for (let col = 0; col < 5; col++) {
-      const cellX = x + col * cellSize;
-      const cellY = y - row * cellSize;
-      doc.rect(cellX, cellY, cellSize, cellSize).stroke();
+      const posX = x + col * tamCelda;
+      const posY = y - fila * tamCelda;
+      doc.rect(posX, posY, tamCelda, tamCelda).stroke();
 
-      doc.fontSize(row === 0 ? 24 : 18).fillColor('black');
-      const text = row === 0 ? 'BINGO'[col] : datos[row - 1][col].toString();
-      const offsetY = row === 0 ? 30 : 28;
-      doc.text(text, cellX + 25, cellY + offsetY, { align: 'center' });
+      doc.fontSize(fila === 0 ? 18 : 14);
+      const texto = fila === 0 ? columnas[col] : datos[fila - 1][col].toString();
+      doc.text(texto, posX + 12, posY + 12);
     }
   }
 }
@@ -62,18 +61,24 @@ function generarCartonesPDF(cantidad, rutaSalida) {
   const stream = fs.createWriteStream(rutaSalida);
   doc.pipe(stream);
 
-  const posiciones = [
-    { x: 50, y: 750 },
-    { x: 330, y: 750 },
-    { x: 50, y: 400 },
-    { x: 330, y: 400 },
-  ];
+  const anchoCarton = 280;
+  const altoCarton = 280;
+  const margenX = 40;
+  const margenY = 60;
+  const espacioX = 20;
+  const espacioY = 30;
 
   for (let i = 0; i < cantidad; i++) {
-    const { x, y } = posiciones[i % 4];
+    const col = i % 2;
+    const fila = Math.floor((i % 4) / 2);
+    const x = margenX + col * (anchoCarton + espacioX);
+    const y = 720 - fila * (altoCarton + espacioY);
     const datos = generarCarton();
     dibujarCarton(doc, x, y, datos);
-    if ((i + 1) % 4 === 0 && i !== cantidad - 1) doc.addPage();
+
+    if ((i + 1) % 4 === 0 && i !== cantidad - 1) {
+      doc.addPage();
+    }
   }
 
   doc.end();
