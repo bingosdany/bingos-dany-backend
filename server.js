@@ -1,107 +1,83 @@
-// === SERVER.JS (BACKEND) ===
-const express = require('express');
-const multer = require('multer');
-const cors = require('cors');
-const nodemailer = require('nodemailer');
-const PDFDocument = require('pdfkit');
-const fs = require('fs');
-const path = require('path');
+const express = require("express");
+const mongoose = require("mongoose");
+const nodemailer = require("nodemailer");
+const cors = require("cors");
+const bodyParser = require("body-parser");
+const path = require("path");
+require("dotenv").config(); // Importar variables de entorno
 
 const app = express();
-app.use(cors());
-app.use(express.static('public'));
-app.use(express.json());
-
-const storage = multer.memoryStorage();
-const upload = multer({ storage });
-
-let cartonesVendidos = 0;
-const TOTAL_CARTONES = 100; // Puedes cambiar este valor
-
-function generarCartonesPDF(cantidad, rutaSalida) {
-  const doc = new PDFDocument({ size: 'A4', margin: 0 });
-  const stream = fs.createWriteStream(rutaSalida);
-  doc.pipe(stream);
-
-  const cartonesPorHoja = 4;
-  const anchoCarton = 280;
-  const altoCarton = 280;
-  const celdaSize = 45;
-  const margenX = 40;
-  const margenY = 40;
-
-  let contador = 0;
-  for (let i = 0; i < cantidad; i++) {
-    const posX = margenX + (i % 2) * (anchoCarton + margenX);
-    const posY = margenY + Math.floor((i % cartonesPorHoja) / 2) * (altoCarton + margenY);
-
-    // Dibujar tabla básica de bingo
-    const columnas = [[], [], [], [], []];
-    for (let col = 0; col < 5; col++) {
-      const min = col * 15 + 1;
-      const max = col === 4 ? 75 : min + 14;
-      const nums = Array.from({ length: max - min + 1 }, (_, j) => min + j);
-      columnas[col] = nums.sort(() => 0.5 - Math.random()).slice(0, 5);
-    }
-    columnas[2][2] = 'FREE';
-
-    const letras = ['B', 'I', 'N', 'G', 'O'];
-    for (let col = 0; col < 5; col++) {
-      for (let row = 0; row < 6; row++) {
-        const x = posX + col * celdaSize;
-        const y = posY + row * celdaSize;
-
-        doc.rect(x, y, celdaSize, celdaSize).stroke();
-        doc.fontSize(12).text(
-          row === 0 ? letras[col] : columnas[col][row - 1],
-          x + 12,
-          y + 14
-        );
-      }
-    }
-    if ((i + 1) % cartonesPorHoja === 0) doc.addPage();
-  }
-  doc.end();
-}
-
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: 'bingosdanyoficial@gmail.com',
-    pass: 'pxvhbnxtjqfysksa'
-  }
-});
-
-app.post('/enviar', upload.single('archivo'), (req, res) => {
-  const { nombre, correo, cantidad } = req.body;
-  if (!nombre || !correo || !req.file || !cantidad) {
-    return res.status(400).json({ error: 'Datos incompletos' });
-  }
-
-  const cantidadNum = parseInt(cantidad);
-  cartonesVendidos += cantidadNum;
-
-  const rutaPDF = path.join(__dirname, 'cartones', `cartones_${Date.now()}.pdf`);
-  generarCartonesPDF(cantidadNum, rutaPDF);
-
-  setTimeout(() => {
-    transporter.sendMail({
-      from: 'Bingos Dany <bingosdanyoficial@gmail.com>',
-      to: correo,
-      subject: 'Tus cartones de Bingo',
-      text: `Hola ${nombre}, adjunto encontrarás tus ${cantidad} cartones para el Bingo.`,
-      attachments: [{ filename: 'cartones_bingo.pdf', path: rutaPDF }]
-    }, (error) => {
-      if (error) return res.status(500).json({ error: 'Error al enviar correo' });
-      res.json({ mensaje: 'Cartones enviados correctamente' });
-    });
-  }, 1000);
-});
-
-app.get('/progreso', (req, res) => {
-  const porcentaje = Math.min(100, Math.round((cartonesVendidos / TOTAL_CARTONES) * 100));
-  res.json({ porcentaje });
-});
-
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Servidor activo en puerto ${PORT}`));
+
+app.use(cors());
+app.use(bodyParser.json());
+app.use(express.static(path.join(__dirname, "public"))); // Servir archivos del frontend
+
+mongoose.connect(process.env.MONGODB_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+});
+
+const userSchema = new mongoose.Schema({
+  name: String,
+  email: String,
+  proof: String,
+  assigned: Boolean,
+});
+
+const User = mongoose.model("User", userSchema);
+
+// Obtener todos los usuarios
+app.get("/api/users", async (req, res) => {
+  try {
+    const users = await User.find();
+    res.json(users);
+  } catch (err) {
+    res.status(500).send("Error al obtener usuarios");
+  }
+});
+
+// Asignar cartones manualmente
+app.post("/api/assign", async (req, res) => {
+  const { id, count } = req.body;
+
+  try {
+    const user = await User.findById(id);
+    if (!user) return res.status(404).send("Usuario no encontrado");
+
+    const cartones = [];
+    for (let i = 0; i < count; i++) {
+      cartones.push(`Cartón #${i + 1}: ${Math.random().toString(36).substr(2, 10).toUpperCase()}`);
+    }
+
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: "tartaraexpressalvajadas@gmail.com",
+        pass: "Mercedes2585@",
+      },
+    });
+
+    await transporter.sendMail({
+      from: "Bingos Dany <tartaraexpressalvajadas@gmail.com>",
+      to: user.email,
+      subject: "Tus cartones de bingo",
+      text: `Hola ${user.name}, aquí tienes tus ${count} cartones:
+
+${cartones.join("\n")}
+
+¡Buena suerte!`,
+    });
+
+    user.assigned = true;
+    await user.save();
+
+    res.send("Cartones enviados");
+  } catch (err) {
+    res.status(500).send("Error al asignar cartones");
+  }
+});
+
+app.listen(PORT, () => {
+  console.log(`Servidor corriendo en el puerto ${PORT}`);
+});

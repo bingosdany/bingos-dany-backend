@@ -1,0 +1,86 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bingos Dany</title>
+  <style>
+    body {
+      background-color: #ffe600;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 20px;
+    }
+    h1 {
+      color: #e60000;
+    }
+    form {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      max-width: 400px;
+      margin: auto;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+    }
+    input, button {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    .copiable {
+      background-color: #f0f0f0;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Bingos Dany</h1>
+  <p><strong>Nequi:</strong> <span class="copiable" onclick="copiarTexto('3103571291')">3103571291 (Toca para copiar)</span></p>
+  <p><strong>WhatsApp atención:</strong> 3207171009</p>
+
+  <form id="formulario">
+    <input type="text" name="nombre" placeholder="Tu nombre" required>
+    <input type="email" name="correo" placeholder="Tu correo" required>
+    <input type="number" name="cartones" placeholder="Cantidad de cartones" required>
+    <input type="url" name="comprobanteUrl" placeholder="URL del comprobante" required>
+    <button type="submit">Enviar</button>
+  </form>
+
+  <script>
+    function copiarTexto(texto) {
+      navigator.clipboard.writeText(texto).then(() => {
+        alert("Número copiado: " + texto);
+      });
+    }
+
+    document.getElementById("formulario").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const datos = {
+        nombre: e.target.nombre.value,
+        correo: e.target.correo.value,
+        cartones: parseInt(e.target.cartones.value),
+        comprobanteUrl: e.target.comprobanteUrl.value
+      };
+
+      fetch("http://localhost:3000/api/compras", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(datos)
+      })
+      .then(res => res.json())
+      .then(data => {
+        alert("Formulario enviado correctamente. Revisa tu correo para tus cartones.");
+        e.target.reset();
+      })
+      .catch(err => {
+        alert("Error al enviar los datos.");
+        console.error(err);
+      });
+    });
+  </script>
+</body>
+</html>
